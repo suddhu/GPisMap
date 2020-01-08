@@ -36,6 +36,14 @@
 #define GPISMAP_TREE_MAX_HALF_LENGTH       (102.4)
 #define GPISMAP_TREE_INIT_ROOT_HALF_LENGTH (12.8)
 
+
+/* GPisMap2 */
+#define GPISMAP2_RTIMES                     2.0
+#define GPISMAP2_TREE_CLUSTER_HALF_LENGTH   (0.025)
+#define GPISMAP2_TREE_MIN_HALF_LENGTH       (0.0125/2.0)
+#define GPISMAP2_TREE_MAX_HALF_LENGTH       (1.6)
+#define GPISMAP2_TREE_INIT_ROOT_HALF_LENGTH (0.4)
+
 /* GPisMap3 */
 #define GPISMAP3_RTIMES                     2.0
 #define GPISMAP3_TREE_CLUSTER_HALF_LENGTH   (0.025)
@@ -72,6 +80,26 @@
 #define GPISMAP_MIN_GRAD_NOISE    1e-2
 #define GPISMAP_MAP_SCALE         1.2
 #define GPISMAP_MAP_NOISE         1e-2
+
+
+/* GPisMap2 */
+#define GPISMAP2_MAX_RANGE   4e0
+#define GPISMAP2_MIN_RANGE   4e-1
+
+/* delx: numerical step delta (e.g. surface normal sampling)
+ * fbias: constant map bias values (mean of GP)
+ * obs_var_thre: threshold for variance of ObsGP
+ *                - If var(prediction) > v_thre, then don't rely on the prediction.
+ * obs_skip: use every 'skip'-th pixel
+ */
+#define GPISMAP2_DELX           1e-3
+#define GPISMAP2_FBIAS          0.2
+#define GPISMAP2_OBS_SKIP       2
+#define GPISMAP2_OBS_VAR_THRE   0.04
+#define GPISMAP2_MIN_POS_NOISE  1e-3
+#define GPISMAP2_MIN_GRAD_NOISE 1e-2
+#define GPISMAP2_MAP_SCALE      0.04
+#define GPISMAP2_MAP_NOISE      5e-3
 
 /* GPisMap3 */
 #define GPISMAP3_MAX_RANGE   4e0
