@@ -26,6 +26,7 @@ addpath('../mex');
 load('../data/2D/gazebo1.mat');
 
 % test points (regular samples for visualization)
+% map limits
 xmin = -5;
 xmax = 20;
 ymin = -15;
@@ -37,6 +38,8 @@ xtest = single([xg(:)'; yg(:)']);
 skip = 100;
 initframe = 101; % first 100 frames are almost static...
 lastframe = (floor((size(poses,1)-initframe)/skip))*skip+initframe;
+
+%skip every skip frames
 for nframe = initframe:skip:lastframe
 
     % pose
@@ -51,13 +54,14 @@ for nframe = initframe:skip:lastframe
                         single([tr; reshape(Rot,[],1)]));
     toc
     % test visualization
-    if  nframe == lastframe % set the condition to 1 to visualize every update
+    if 1 % set the condition to 1 to visualize every update
+%     if  nframe == lastframe % set the condition to 1 to visualize every update
         visualize_gpisMap
     end
 
     % % pause if needed
-    % disp('Press a button to continue')
-    % pause
+    disp('Press a button to continue')
+    pause
 
 end
 

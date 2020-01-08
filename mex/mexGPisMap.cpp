@@ -31,12 +31,20 @@ static double test_time = 0.0;
 static std::chrono::high_resolution_clock::time_point t1;
 static std::chrono::high_resolution_clock::time_point t2;
 
+// https://www.mathworks.com/help/matlab/apiref/mexfunction.html?searchHighlight=mexfunction
+// nlhs: # of output arguments
+// plhs: Array of pointers to the expected mxArray output arguments.
+// nrhs: # of input arguments
+// prhs: Array of pointers to the mxArray input arguments. 
+// input to the mexFn: 'update', thetas, ranges(n,:), poses(n) 
 void mexFunction (int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 
+    // get flag = 'update'
     char command[128];
     mxGetString(prhs[0],command,128);
     std::string commstr(command);
 
+  // if update flag
   if (commstr.compare("update")==0) {
 
         if (gpm == 0){
@@ -54,15 +62,14 @@ void mexFunction (int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
                 return;
             }
 
-            float * pa = (float *)mxGetData(prhs[1]);
-            float * pr = (float *)mxGetData(prhs[2]);
-            float * ppose = (float *)mxGetData(prhs[3]);
+            float * pa = (float *)mxGetData(prhs[1]); // thetas
+            float * pr = (float *)mxGetData(prhs[2]); // ranges
+            float * ppose = (float *)mxGetData(prhs[3]); // poses
 
-            std::vector<float> pose(ppose, ppose + mxGetNumberOfElements(prhs[3]) );
+            std::vector<float> pose(ppose, ppose + mxGetNumberOfElements(prhs[3]) ); // get all poses 
 
             if (nlhs > 0){
                 plhs[0] = mxCreateDoubleMatrix(1,1,mxREAL);
-
             }
 
             int numel =  mxGetNumberOfElements(prhs[2]);

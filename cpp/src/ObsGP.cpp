@@ -36,9 +36,10 @@ void GPou::train(const EMatrixX& xt,const EVectorX& f)
 
     if (N > 0){
         x = xt;
-        EMatrixX K = ornstein_uhlenbeck(xt, scale, noise);
+        EMatrixX K = ornstein_uhlenbeck(xt, scale, noise); // get K matrix
 
-        L = K.llt().matrixL();
+        // whats happening here 
+        L = K.llt().matrixL(); // cholesky of K
         alpha = f;
         L.template triangularView<Lower>().solveInPlace(alpha);
         L.transpose().template triangularView<Upper>().solveInPlace(alpha);
@@ -88,7 +89,7 @@ void ObsGP1D::train( float xt[],  float f[], int N[])
 
     if ((N[0] > 0) && (xt !=0)){
         nSamples = N[0];
-        nGroup = nSamples/(param.group_size) + 1;
+        nGroup = nSamples/(param.group_size) + 1; // number of sample groups
 
         range.push_back(xt[0]);
         for (int n=0;n<(nGroup-1);n++){

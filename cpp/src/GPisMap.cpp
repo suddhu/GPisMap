@@ -102,6 +102,8 @@ void GPisMap::reset(){
     return;
 }
 
+// pre process data
+// thetas, ranges, numel, pose
 bool GPisMap::preproData( float * datax,  float * dataf, int N, std::vector<float> & pose)
 {
     if (datax == 0 || dataf == 0 || N < 1)
@@ -130,7 +132,7 @@ bool GPisMap::preproData( float * datax,  float * dataf, int N, std::vector<floa
                 range_obs_max = dataf[k];
             obs_theta.push_back(datax[k]);
             obs_range.push_back(dataf[k]);
-            obs_f.push_back(1.0/std::sqrt(dataf[k]));
+            obs_f.push_back(1.0/std::sqrt(dataf[k])); // why not just 1/z
             polar2Cart(datax[k] , dataf[k], xloc, yloc);
             obs_xylocal.push_back(xloc);
             obs_xylocal.push_back(yloc);
@@ -148,40 +150,46 @@ bool GPisMap::preproData( float * datax,  float * dataf, int N, std::vector<floa
     return false;
 }
 
+// thetas, ranges, numel, pose
 void GPisMap::update( float * datax,  float * dataf, int N, std::vector<float> & pose)
 {
     if (!preproData(datax,dataf,N,pose))
         return;
 
-    // Step 1
+    // Steps in Fig. 4 of paper 
+    // Step 1: add current data and train GP
     if (regressObs()){
 
-        // Step 2
+        // Step 2: Query visible clusters, infer correspondences, reeval map points
         updateMapPoints();
-        // Step 3
+        // Step 3: test if newly observed points can be inserted into map
         addNewMeas();
-        // Step 4
+        // Step 4: recompute active set 
         updateGPs();
     }
     return;
 }
 
-bool GPisMap::regressObs( ){
+// Step 1: GP regressor using the Ornstein-Uuhlenbeck covariance function.
+bool GPisMap::regressObs(){
     int N[2];
     if (gpo == 0){
-        gpo = new ObsGP1D();
+        gpo = new ObsGP1D(); //  ObsGP for 1D input.
     }
 
     N[0] = obs_numdata;
     gpo->reset();
+    // train with current data point (theta, range)
     gpo->train( obs_theta.data(),obs_f.data(), N);
     return gpo->isTrained();
 }
 
+// Step 2: Query visible clusters and infer correspondences
 void GPisMap::updateMapPoints(){
+    // doesn't work if no existing measurements
     if (t!=0 && gpo !=0){
 
-        AABB searchbb(pose_tr[0],pose_tr[1],range_obs_max);
+        AABB searchbb(pose_tr[0],pose_tr[1],range_obs_max); //quadtree
         std::vector<QuadTree*> quads;
         t->QueryNonEmptyLevelC(searchbb,quads);
 
@@ -454,8 +462,9 @@ void GPisMap::reEvalPoints(std::vector<std::shared_ptr<Node> >& nodes){
     return;
 }
 
+// Step 3
 void GPisMap::addNewMeas(){
-    // create if not initialized
+    // create Quadtree if not initialized
     if (t == 0){
         t = new QuadTree(Point<float>(0.0,0.0));
     }
@@ -464,11 +473,12 @@ void GPisMap::addNewMeas(){
 }
 
 void GPisMap::evalPoints(){
-
+    
+    // if quadtree is empty
      if (t == 0 || obs_numdata < 1)
          return;
 
-    // For each point
+    // For each point (new data)
     for (int k=0; k<obs_numdata; k++){
         int k2 = 2*k;
 
@@ -478,9 +488,9 @@ void GPisMap::evalPoints(){
         EMatrixX amx(1,1);
 
         amx(0,0) = obs_theta[k];
-        gpo->test(amx,rinv0,var);
+        gpo->test(amx,rinv0,var); // test using the trained GP regressor
 
-        if (var(0) > setting.obs_var_thre)
+        if (var(0) > setting.obs_var_thre) // 0.1
         {
             continue;
         }
@@ -512,6 +522,7 @@ void GPisMap::evalPoints(){
         float occ[4] = {-1.0,-1.0,-1.0,-1.0};
         float occ_mean = 0.0;
         int i=0;
+        // delx:  1e-2
         for (; i<4; i++){
             Xperturb[i] = obs_xylocal[k2] + setting.delx*Xperturb[i];
             Yperturb[i] = obs_xylocal[k2+1] + setting.delx*Yperturb[i];

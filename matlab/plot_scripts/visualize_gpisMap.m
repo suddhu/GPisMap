@@ -35,11 +35,11 @@ va = reshape(res(4,:),size(xg));
 % res(1:2,:) : grad
 % res(4,:) : var
 
-figure(1), hold off;
-gcf_position = get(gcf,'Position');
-gcf_position(3:4) = [(xmax-xmin)*20+10 (ymax-ymin)*20+10];
-set(gcf,'Color','w','Position',gcf_position);
-ax1 = gca;  hold off;
+hold off;
+% gcf_position = get(gcf,'Position');
+% gcf_position(3:4) = [(xmax-xmin)*20+10 (ymax-ymin)*20+10];
+% set(gcf,'Color','w','Position',gcf_position);
+ax1 = gca;
 
 % sdf
 h = pcolor(xg,yg,reshape(fval,size(xg)));  hold on;
@@ -58,24 +58,24 @@ ty_draw = ((ymax-ymin)*(temp(Ind,1)-0.5)/size(yg,1)) + ymin;
 plot(tx_draw,ty_draw,'r.','MarkerSize',5);
 
 % variance
-ax2 = axes; hold off;
-h = pcolor(ax2,xg,yg,ones(size(va))); hold on;
-set(h,'EdgeColor','none');
-alpha(ax2,va);
-linkaxes([ax1,ax2])
-ax2.Visible = 'off';
-ax2.XTick = [];
-ax2.YTick = [];
-axis(ax2,'equal');
-colormap(ax1,parula)
-colormap(ax2,[1 1 1])
-set([ax1 ax2],'Units','pixels');
-set([ax1,ax2],'Position',[5 5 (xmax-xmin)*20 (ymax-ymin)*20]);
-set([ax1,ax2],'XLim',[xmin xmax]);
-set([ax1,ax2],'YLim',[ymin ymax]);
-set([ax1,ax2],'XTick',{});
-set([ax1,ax2],'YTick',{});
-drawnow;
+% ax2 = axes; hold off;
+% h = pcolor(ax2,xg,yg,ones(size(va))); hold on;
+% set(h,'EdgeColor','none');
+% alpha(ax2,va);
+% linkaxes([ax1,ax2])
+% ax2.Visible = 'off';
+% ax2.XTick = [];
+% ax2.YTick = [];
+% axis(ax2,'equal');
+% colormap(ax1,parula)
+% colormap(ax2,[1 1 1])
+% set([ax1 ax2],'Units','pixels');
+% set([ax1,ax2],'Position',[5 5 (xmax-xmin)*20 (ymax-ymin)*20]);
+% set([ax1,ax2],'XLim',[xmin xmax]);
+% set([ax1,ax2],'YLim',[ymin ymax]);
+% set([ax1,ax2],'XTick',{});
+% set([ax1,ax2],'YTick',{});
+% drawnow;
 
 % measurement
 valid = find((ranges(nframe,:)'<3e1) & (ranges(nframe,:)'>2e-1) & (~isinf(ranges(nframe,:)')));
@@ -91,4 +91,4 @@ headpatch = patch( arr(1,:),arr(2,:),'w');
 set(headpatch, 'EdgeColor','r','LineWidth',2);
 plot(poses(initframe:skip:nframe,1),poses(initframe:skip:nframe,2),'k-','LineWidth',1);
 drawnow;
-set(gcf,'Position',gcf_position);
+% set(gcf,'Position',gcf_position);

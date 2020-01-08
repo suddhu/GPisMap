@@ -62,8 +62,8 @@ void mexFunction (int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
                 return;
             }
 
-            float * pz = (float *)mxGetData(prhs[1]);
-            float * ppose = (float *)mxGetData(prhs[2]);
+            float * pz = (float *)mxGetData(prhs[1]); // 3d points
+            float * ppose = (float *)mxGetData(prhs[2]); //poses
 
             std::vector<float> pose(ppose, ppose + mxGetNumberOfElements(prhs[2]) );
 
