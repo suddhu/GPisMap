@@ -92,3 +92,4 @@ set(headpatch, 'EdgeColor','r','LineWidth',2);
 plot(poses(initframe:skip:nframe,1),poses(initframe:skip:nframe,2),'k-','LineWidth',1);
 drawnow;
 % set(gcf,'Position',gcf_position);
+

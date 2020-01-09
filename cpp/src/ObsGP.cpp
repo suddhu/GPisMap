@@ -22,6 +22,7 @@
 #include "covFnc.h"
 #include <Eigen/Cholesky>
 #include <thread>
+#include <iostream>
 
 using namespace Eigen;
 
@@ -33,6 +34,8 @@ void GPou::train(const EMatrixX& xt,const EVectorX& f)
 {
     int dim = xt.rows();
     int N = xt.cols();
+
+    std:cout<<"dim: "<<dim<<"\t"<<"N: "<<N<<std::endl;
 
     if (N > 0){
         x = xt;
@@ -203,8 +206,9 @@ void ObsGP2D::reset(){
 }
 
 void ObsGP2D::computePartition(float val[], int ni, int nj)
-{
-    // number of data grid
+{   
+    // val: vu_grid
+    // number of data grid (resolution)
     szSamples[0] = ni;
     szSamples[1] = nj;
 
@@ -219,8 +223,8 @@ void ObsGP2D::computePartition(float val[], int ni, int nj)
     Val_i.clear();
     Val_j.clear();
 
-    // [0]-Range for each group
-    Val_i.push_back(val[0]);
+    // [0]-Range for each group (x)
+    Val_i.push_back(val[0]); 
     for (int n=0;n<nGroup[0];n++){
 
         int i0 = n*param.group_size;
@@ -239,7 +243,7 @@ void ObsGP2D::computePartition(float val[], int ni, int nj)
 
     }
 
-    // [1]-Range for each group
+    // [1]-Range for each group (y)
     Val_j.push_back(val[1]);
     for (int m=0;m<nGroup[1];m++){
 
@@ -284,7 +288,7 @@ void ObsGP2D::trainValidPoints(float xt[], float f[])
         return;
 
      clearGPs();
-     gps.resize(nGroup[0]*nGroup[1],nullptr);
+     gps.resize(nGroup[0]*nGroup[1],nullptr); // number of clusters: nGroup[0]*nGroup[1]
 
      auto itj0 = Ind_j0.begin();
      auto itj1 = Ind_j1.begin();
@@ -310,9 +314,9 @@ void ObsGP2D::trainValidPoints(float xt[], float f[])
                 }
             }
 
-            // If not empty
+            // If not empty, training loop
             if (x_valid.size() > 1){
-                // matrix/vector map from vector
+                // matrix/vector map from vector (train one by one)
                 Map<EMatrixX> x_(x_valid.data(),2,f_valid.size());
                 Map<EVectorX> f_(f_valid.data(),f_valid.size());
 
@@ -330,9 +334,12 @@ void ObsGP2D::trainValidPoints(float xt[], float f[])
 }
 
 void ObsGP2D::train( float xt[], float f[], int N[])
-{
+{   
+    // xt: vu_grid, f: z_inv
+    // if not empty
     if ((N[0] > 0) && (N[1] > 0) && (xt !=0)){
-
+        
+        // repartition true first time
         if ((szSamples[0] != N[0]) || (szSamples[1] != N[1]) || repartition){
             computePartition(xt,N[0],N[1]);
         }

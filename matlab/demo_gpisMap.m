@@ -57,11 +57,12 @@ for nframe = initframe:skip:lastframe
     if 1 % set the condition to 1 to visualize every update
 %     if  nframe == lastframe % set the condition to 1 to visualize every update
         visualize_gpisMap
+        saveas(gcf, strcat(num2str(nframe),'.png'))
     end
 
     % % pause if needed
-    disp('Press a button to continue')
-    pause
+%     disp('Press a button to continue')
+%     pause
 
 end
 

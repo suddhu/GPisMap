@@ -236,6 +236,7 @@ void GPisMap3::update(float * dataz, int N, std::vector<float> & pose)
     return;
 }
 
+// Step 1
 bool GPisMap3::regressObs(){
 
     int dim[2];
