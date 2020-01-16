@@ -23,9 +23,9 @@
 #include <memory>
 #include <iostream>
 #include <chrono>
-#include "GPisMap.h"
+#include "GPShape.h"
 
-static GPisMap* gpm = 0;
+static GPShape* gpm = 0;
 
 static double test_time = 0.0;
 static std::chrono::high_resolution_clock::time_point t1;
@@ -48,7 +48,7 @@ void mexFunction (int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
   if (commstr.compare("update")==0) {
 
         if (gpm == 0){
-            gpm = new GPisMap();
+            gpm = new GPShape();
         }
         mwSize numDim = mxGetNumberOfDimensions(prhs[1]);
         const mwSize *dims = mxGetDimensions(prhs[1]);
@@ -64,9 +64,6 @@ void mexFunction (int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 
             float * pa = (float *)mxGetData(prhs[1]); // thetas
             float * pr = (float *)mxGetData(prhs[2]); // ranges
-            float * ppose = (float *)mxGetData(prhs[3]); // poses
-
-            std::vector<float> pose(ppose, ppose + mxGetNumberOfElements(prhs[3]) ); // get all poses 
 
             if (nlhs > 0){
                 plhs[0] = mxCreateDoubleMatrix(1,1,mxREAL);
@@ -74,7 +71,7 @@ void mexFunction (int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 
             int numel =  mxGetNumberOfElements(prhs[2]);
             t1 = std::chrono::high_resolution_clock::now();
-            gpm->update(pa, pr, numel, pose);
+            gpm->update(pa, pr, numel);
             t2= std::chrono::high_resolution_clock::now();
 
             // test time

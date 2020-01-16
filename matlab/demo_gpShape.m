@@ -23,42 +23,39 @@ close all
 addpath(genpath('./util'));
 addpath('./plot_scripts');
 addpath('../mex');
-load('../data/2D/gazebo1.mat');
+
+shape = 'butter';
+id = '20200115-2213';
+
+file = strcat('/home/suddhu/software/GPIS/data/contacts/contacts-', shape,'-', id, '.txt');
+data = importdata(file);
+
+data(:,3:4) = normr(data(:,3:4)); % unit normals
 
 % test points (regular samples for visualization)
 % map limits
-xmin = -5;
-xmax = 20;
-ymin = -15;
-ymax = 5;
+xmin = -2.5;
+xmax = 2.5;
+ymin = -2.5;
+ymax = 2.5;
 test_intv = 0.1;
 [xg, yg] = meshgrid((xmin+test_intv):test_intv:(xmax-test_intv), (ymin+test_intv):test_intv:(ymax-test_intv));
 xtest = single([xg(:)'; yg(:)']);
 
-skip = 100;
-initframe = 101; % first 100 frames are almost static...
-lastframe = (floor((size(poses,1)-initframe)/skip))*skip+initframe;
-
 %skip every skip frames
-for nframe = initframe:skip:lastframe
+for i=1:size(data,1)
 
-    % pose
-    tr = poses(nframe,1:2)';
-    phi = poses(nframe,3);
-    Rot = [cos(phi) -sin(phi); sin(phi) cos(phi)];
-
+    X_gp = data(i,1:2); % input
+    Y_gp = [0, data(i,3:4)]'; % output
+        
     % update
     tic
-    mexGPisMap('update',single(thetas),...
-                        single(ranges(nframe,:)'),...
-                        single([tr; reshape(Rot,[],1)]));
+    mexGPShape('update',single(X_gp), single(Y_gp));
     toc
+    
     % test visualization
-%     if 1 % set the condition to 1 to visualize every update
-    if  nframe == lastframe % set the condition to 1 to visualize every update
-        visualize_gpisMap
-%         saveas(gcf, strcat(num2str(nframe),'.png'))
-    end
+    visualize_gpisMap
+%     saveas(gcf, strcat(num2str(nframe),'.png'))
 
     % % pause if needed
 %     disp('Press a button to continue')
@@ -67,4 +64,4 @@ for nframe = initframe:skip:lastframe
 end
 
 % delete all resources
-mexGPisMap('reset');
+mexGPShape('reset');

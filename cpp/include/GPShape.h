@@ -1,6 +1,6 @@
 /*
- * GPisMap - Online Continuous Mapping using Gaussian Process Implicit Surfaces
- * https://github.com/leebhoram/GPisMap
+ * GPShape - Online Continuous Mapping using Gaussian Process Implicit Surfaces
+ * https://github.com/leebhoram/GPShape
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License v3 as published by
@@ -18,111 +18,92 @@
  *          Huang Zonghao<ac@hzh.io>
  */
 
-#ifndef __GPIS_MAP2__H__
-#define __GPIS_MAP2__H__
+#ifndef __GPSHAPE__H__
+#define __GPSHAPE__H__
 
 #include "ObsGP.h"
 #include "OnGPIS.h"
-#include "octree.h"
+#include "quadtree.h"
 #include "params.h"
 
-typedef struct camParam_{
-    float fx;
-    float fy;
-    float cx;
-    float cy;
-    int width;
-    int height;
-
-    camParam_(){
-        width = 640;
-        height = 480;
-        fx = 568.0; // 570.9361;
-        fy = 568.0; // 570.9361;
-        cx = 310;// 307;
-        cy = 224; //240;
-    }
-    camParam_(float fx_, float fy_, float cx_, float cy_, float w_, float h_): fx(fx_),fy(fy_), cx(cx_), cy(cy_), width(w_), height(h_){}
-} camParam;
-
-typedef struct GPisMap2Param_{
+typedef struct GPShapeParam_{
     float delx;         // numerical step delta (e.g. surface normal sampling)
     float fbias;        // constant map bias values (mean of GP)
+    float sensor_offset[2];
+    float angle_obs_limit[2];
     float obs_var_thre; // threshold for variance of ObsGP
                         //  - If var(prediction) > v_thre, then don't rely on the prediction.
-    int   obs_skip;     // use every 'skip'-th pixel
     float min_position_noise;
     float min_grad_noise;
 
     float map_scale_param;
     float map_noise_param;
 
-    GPisMap2Param_(){
-        delx = GPISMAP2_DELX;
-        fbias = GPISMAP2_FBIAS;
-        obs_skip = GPISMAP2_OBS_SKIP;
-        obs_var_thre = GPISMAP2_OBS_VAR_THRE;
-        min_position_noise = GPISMAP2_MIN_POS_NOISE;
-        min_grad_noise = GPISMAP2_MIN_GRAD_NOISE;
-        map_scale_param = GPISMAP2_MAP_SCALE;
-        map_noise_param = GPISMAP2_MAP_NOISE;
+    GPShapeParam_(){
+        delx = GPSHAPE_DELX;
+        fbias = GPSHAPE_FBIAS;
+        obs_var_thre = GPSHAPE_OBS_VAR_THRE;
+        sensor_offset[0] = GPSHAPE_SENSOR_OFFSET_0;
+        sensor_offset[1] = GPSHAPE_SENSOR_OFFSET_1;
+        angle_obs_limit[0] = GPSHAPE_ANGLE_OBS_LIMIT_0;
+        angle_obs_limit[1] = GPSHAPE_ANGLE_OBS_LIMIT_1;
+        min_position_noise = GPSHAPE_MIN_POS_NOISE;
+        min_grad_noise = GPSHAPE_MIN_GRAD_NOISE;
+        map_scale_param = GPSHAPE_MAP_SCALE;
+        map_noise_param = GPSHAPE_MAP_NOISE;
     }
 
-    GPisMap2Param_(GPisMap2Param_& par){
+    GPShapeParam_( GPShapeParam_& par){
         delx = par.delx;
         fbias = par.fbias;
-        obs_skip = par.obs_skip;
         obs_var_thre = par.obs_var_thre;
+        sensor_offset[0] = par.sensor_offset[0];
+        sensor_offset[1] = par.sensor_offset[1];
         min_position_noise = par.min_position_noise;
         min_grad_noise = par.min_grad_noise;
         map_scale_param = par.map_scale_param;
         map_noise_param = par.map_noise_param;
     }
-}GPisMap2Param;
+}GPShapeParam;
 
-class GPisMap2{
+class GPShape{
 protected:
-    GPisMap2Param setting;
-    camParam cam;
+    GPShapeParam setting;
 
-    float u_obs_limit[2];
-    float v_obs_limit[2];
-
-    std::vector<float> vu_grid;
-
-    OcTree* t;
-    std::unordered_set<OcTree*> activeSet;
+    QuadTree* t;
+    std::unordered_set<QuadTree*>  activeSet;
     const int mapDimension = 2;
- 
+
     void init();
-    bool preprocData( float * dataz, int N, std::vector<float> & pose);
+    bool preproData( float * datax,  float * dataf, int N, std::vector<float> & pose);
     bool regressObs();
     void updateMapPoints();
-    void reEvalPoints(std::vector<std::shared_ptr<Node3> >& nodes);
+    void reEvalPoints(std::vector<std::shared_ptr<Node> >& nodes);
     void evalPoints();
     void addNewMeas();
     void updateGPs();
 
     ObsGP* gpo;
-    std::vector<float> obs_valid_u;
-    std::vector<float> obs_valid_v;
-    std::vector<float> obs_zinv;
-    std::vector<float> obs_valid_xyzlocal;
-    std::vector<float> obs_valid_xyzglobal;
+    std::vector<float> obs_theta;
+    std::vector<float> obs_range;
+    std::vector<float> obs_f;
+    std::vector<float> obs_xylocal;
+    std::vector<float> obs_xyglobal;
     std::vector<float> pose_tr;
     std::vector<float> pose_R;
     int obs_numdata;
     float range_obs_max;
 
 public:
-    GPisMap2();
-    GPisMap2(GPisMap2Param par);
-    ~GPisMap2();
+    GPShape();
+    GPShape(GPShapeParam par);
+    ~GPShape();
     void reset();
 
-    void getAllPoints(std::vector<float> & pos);
-    void update( float * dataz, int N, std::vector<float> & pose);
+    void update(  float * datax,  float * dataf, int N, std::vector<float> & pose);
     bool test( float* x, int dim, int leng, float * res);
+
+    int getMapDimension(){return mapDimension;}
 
 private:
     void test_kernel(int thread_idx,
@@ -134,7 +115,7 @@ private:
     void updateGPs_kernel(int thread_idx,
                           int start_idx,
                           int end_idx,
-                          OcTree **nodes_to_update);
+                          QuadTree **nodes_to_update);
 };
 
 #endif

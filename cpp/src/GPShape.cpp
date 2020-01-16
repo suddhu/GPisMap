@@ -1,6 +1,6 @@
 /*
- * GPisMap - Online Continuous Mapping using Gaussian Process Implicit Surfaces
- * https://github.com/leebhoram/GPisMap
+ * GPShape - Online Continuous Mapping using Gaussian Process Implicit Surfaces
+ * https://github.com/leebhoram/GPShape
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License v3 as published by
@@ -18,7 +18,7 @@
  *          Huang Zonghao<ac@hzh.io>
  */
 
-#include "GPisMap.h"
+#include "GPShape.h"
 #include <algorithm>
 #include <thread>
 #include "params.h"
@@ -59,14 +59,14 @@ static void cart2polar(float x, float y, float& a, float &r)
     return;
 }
 
-GPisMap::GPisMap():t(0),
+GPShape::GPShape():t(0),
                    gpo(0),
                    obs_numdata(0)
 {
     init();
 }
 
-GPisMap::GPisMap(GPisMapParam par):t(0),
+GPShape::GPShape(GPShapeParam par):t(0),
                                    gpo(0),
                                    obs_numdata(0),
                                    setting(par)
@@ -74,17 +74,17 @@ GPisMap::GPisMap(GPisMapParam par):t(0),
     init();
 }
 
-GPisMap::~GPisMap()
+GPShape::~GPShape()
 {
     reset();
 }
 
-void GPisMap::init(){
+void GPShape::init(){
     pose_tr.resize(2);
     pose_R.resize(4);
 }
 
-void GPisMap::reset(){
+void GPShape::reset(){
     if (t!=0){
         delete t;
         t = 0;
@@ -104,7 +104,7 @@ void GPisMap::reset(){
 
 // pre process data
 // thetas, ranges, numel, pose
-bool GPisMap::preproData( float * datax,  float * dataf, int N, std::vector<float> & pose)
+bool GPShape::preproData( float * datax,  float * dataf, int N, std::vector<float> & pose)
 {
     if (datax == 0 || dataf == 0 || N < 1)
         return false;
@@ -151,7 +151,7 @@ bool GPisMap::preproData( float * datax,  float * dataf, int N, std::vector<floa
 }
 
 // thetas, ranges, numel, pose
-void GPisMap::update( float * datax,  float * dataf, int N, std::vector<float> & pose)
+void GPShape::update( float * datax,  float * dataf, int N, std::vector<float> & pose)
 {
     if (!preproData(datax,dataf,N,pose))
         return;
@@ -171,7 +171,7 @@ void GPisMap::update( float * datax,  float * dataf, int N, std::vector<float> &
 }
 
 // Step 1: GP regressor using the Ornstein-Uuhlenbeck covariance function.
-bool GPisMap::regressObs(){
+bool GPShape::regressObs(){
     int N[2];
     if (gpo == 0){
         gpo = new ObsGP1D(); //  ObsGP for 1D input.
@@ -185,7 +185,7 @@ bool GPisMap::regressObs(){
 }
 
 // Step 2: Query visible clusters and infer correspondences
-void GPisMap::updateMapPoints(){
+void GPShape::updateMapPoints(){
     // doesn't work if no existing measurements
     if (t!=0 && gpo !=0){
 
@@ -240,7 +240,7 @@ void GPisMap::updateMapPoints(){
     return;
 }
 
-void GPisMap::reEvalPoints(std::vector<std::shared_ptr<Node> >& nodes){
+void GPShape::reEvalPoints(std::vector<std::shared_ptr<Node> >& nodes){
     // placeholders
     EMatrixX amx(1,1);
     EVectorX rinv0(1);
@@ -464,7 +464,7 @@ void GPisMap::reEvalPoints(std::vector<std::shared_ptr<Node> >& nodes){
 }
 
 // Step 3
-void GPisMap::addNewMeas(){
+void GPShape::addNewMeas(){
     // create Quadtree if not initialized
     if (t == 0){
         t = new QuadTree(Point<float>(0.0,0.0));
@@ -473,7 +473,7 @@ void GPisMap::addNewMeas(){
     return;
 }
 
-void GPisMap::evalPoints(){
+void GPShape::evalPoints(){
     
     // if quadtree is empty
      if (t == 0 || obs_numdata < 1)
@@ -586,7 +586,7 @@ void GPisMap::evalPoints(){
 }
 
 // maybe the mapping is updated here? 
-void GPisMap::updateGPs_kernel(int thread_idx,
+void GPShape::updateGPs_kernel(int thread_idx,
                                int start_idx,
                                int end_idx,
                                QuadTree **nodes_to_update){
@@ -608,7 +608,7 @@ void GPisMap::updateGPs_kernel(int thread_idx,
 
 }
 
-void GPisMap::updateGPs(){
+void GPShape::updateGPs(){
     std::unordered_set<QuadTree*> updateSet(activeSet);
 
     int num_threads = std::thread::hardware_concurrency();
@@ -647,7 +647,7 @@ void GPisMap::updateGPs(){
     int batch_size = num_elements / num_threads_to_use;
     int element_cursor = 0;
     for(int i = 0; i < num_leftovers; ++i){
-        threads[i] = std::thread(&GPisMap::updateGPs_kernel,
+        threads[i] = std::thread(&GPShape::updateGPs_kernel,
                                  this,
                                  i,
                                  element_cursor,
@@ -657,7 +657,7 @@ void GPisMap::updateGPs(){
 
     }
     for (int i = num_leftovers; i < num_threads_to_use; ++i){
-        threads[i] = std::thread(&GPisMap::updateGPs_kernel,
+        threads[i] = std::thread(&GPShape::updateGPs_kernel,
                                  this,
                                  i,
                                  element_cursor,
@@ -678,7 +678,7 @@ void GPisMap::updateGPs(){
 }
 
 // res[0] = k^T alpha = f 
-void GPisMap::test_kernel(int thread_idx,
+void GPShape::test_kernel(int thread_idx,
                           int start_idx,
                           int end_idx,
                           float *x,
@@ -779,7 +779,7 @@ void GPisMap::test_kernel(int thread_idx,
 }
 
 // res is the return value
-bool GPisMap::test(float * x, int dim, int leng, float * res){
+bool GPShape::test(float * x, int dim, int leng, float * res){
     if (x == 0 || dim != mapDimension || leng < 1)
         return false;
 
@@ -798,7 +798,7 @@ bool GPisMap::test(float * x, int dim, int leng, float * res){
     int element_cursor = 0;
 
     for(int i = 0; i < num_leftovers; ++i){
-        threads[i] = std::thread(&GPisMap::test_kernel,
+        threads[i] = std::thread(&GPShape::test_kernel,
                                  this,
                                  i,
                                  element_cursor,
@@ -808,7 +808,7 @@ bool GPisMap::test(float * x, int dim, int leng, float * res){
 
     }
     for (int i = num_leftovers; i < num_threads_to_use; ++i){
-        threads[i] = std::thread(&GPisMap::test_kernel,
+        threads[i] = std::thread(&GPShape::test_kernel,
                                  this,
                                  i,
                                  element_cursor,

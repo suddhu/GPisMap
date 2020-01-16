@@ -32,13 +32,14 @@ using namespace Eigen;
 
 void GPou::train(const EMatrixX& xt,const EVectorX& f)
 {
+    // 2 * N
     int dim = xt.rows();
     int N = xt.cols();
 
-    std:cout<<"dim: "<<dim<<"\t"<<"N: "<<N<<std::endl;
+    // std::cout<<"dim: "<<dim<<"\t"<<"N: "<<N<<std::endl;
 
     if (N > 0){
-        x = xt;
+        x = xt; // training data
         EMatrixX K = ornstein_uhlenbeck(xt, scale, noise); // get K matrix
 
         // whats happening here 

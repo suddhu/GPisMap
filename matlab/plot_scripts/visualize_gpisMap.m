@@ -23,7 +23,7 @@ disp('drawing...');
 %       then start Matlab with the '-nodisplay' option 
 %       and add codes that save the images in a folder.
 
-gp_bias = 0.2;
+gp_bias = 0.2; % in C++ code too GPISMAP_FBIAS
 sensor_offset = [0.08;0];
 head = 0.5*[0.25 0 -0.25 0.25; 0 1 0 0 ];
 

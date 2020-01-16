@@ -256,12 +256,13 @@ bool GPisMap3::regressObs(){
     return gpo->isTrained();
 }
 
+// Step 2
 void GPisMap3::updateMapPoints(){
    
     if (t!=0 && gpo !=0){
         AABB3 searchbb(pose_tr[0],pose_tr[1],pose_tr[2],range_obs_max);
         std::vector<OcTree*> oc;
-        t->QueryNonEmptyLevelC(searchbb,oc);
+        t->QueryNonEmptyLevelC(searchbb,oc); // search within the range for relevant cluster
 
         if (oc.size() > 0){
 
@@ -269,7 +270,7 @@ void GPisMap3::updateMapPoints(){
             int k=0;
             for (auto it = oc.begin(); it != oc.end(); it++, k++) {
 
-                Point3<float> ct = (*it)->getCenter();
+                Point3<float> ct = (*it)->getCenter(); // cluster center
                 float l = (*it)->getHalfLength();
                 float sqr_range = (ct.x-pose_tr[0])*(ct.x-pose_tr[0]) + (ct.y-pose_tr[1])*(ct.y-pose_tr[1])+(ct.z-pose_tr[2])*(ct.z-pose_tr[2]);
 
